@@ -5,10 +5,8 @@ Start:  uvicorn backend.main:app --reload
 
 import logging
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, field_validator
 
 # ---------------------------------------------------------------------------
@@ -22,7 +20,6 @@ from backend.pokeapi import load_all
 logging.basicConfig(level=logging.INFO)
 
 IMPLEMENTATION = logic.__name__.rsplit(".", 1)[-1]
-FRONTEND = Path(__file__).resolve().parent.parent / "frontend" / "index.html"
 
 POKEMON: tuple = ()
 
@@ -68,11 +65,6 @@ class MatchRequest(BaseModel):
         if bad:
             raise ValueError(f"unknown stats: {sorted(bad)}")
         return v
-
-
-@app.get("/")
-def index() -> FileResponse:
-    return FileResponse(FRONTEND)
 
 
 @app.get("/api/meta")
