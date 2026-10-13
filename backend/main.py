@@ -37,7 +37,8 @@ app = FastAPI(title="PokeMatch", lifespan=lifespan)
 class MatchRequest(BaseModel):
     generations: list[int] = Field(default_factory=list, examples=[[1]])
     types: list[str] = Field(default_factory=list, examples=[["fire"]])
-    stat_weights: dict[str, float] = Field(default_factory=dict, examples=[{"attack": 2, "speed": 1}])
+    stat_weights: dict[str, float] = Field(
+        default_factory=dict, examples=[{"attack": 2, "speed": 1}])
     type_bonus: float = 50.0
     limit: int = Field(10, ge=1, le=100)
 
@@ -86,7 +87,8 @@ def match(req: MatchRequest) -> dict:
         type_bonus=req.type_bonus,
     )
     try:
-        best = logic.find_best_matches(POKEMON, req.generations, profile, req.limit)
+        best = logic.find_best_matches(
+            POKEMON, req.generations, profile, req.limit)
     except NotImplementedError as e:
         raise HTTPException(
             status_code=501,
