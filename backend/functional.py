@@ -9,6 +9,7 @@ Rules for this file:
 Must have exactly the same functions/signatures as imperative.py.
 """
 
+from functools import reduce
 from typing import Collection, Sequence
 
 from backend.models import STAT_NAMES, Pokemon, Profile, ScoredPokemon
@@ -25,7 +26,10 @@ def filter_by_generation(
     >>> filter_by_generation((bulbasaur_g1, chikorita_g2), {1})
     (bulbasaur_g1,)
     """
-    raise NotImplementedError("filter_by_generation")
+    return tuple(filter(
+        lambda p: not generations or p.generation in generations,
+        pokemon,
+    ))
 
 
 def filter_by_types(
@@ -38,7 +42,11 @@ def filter_by_types(
     >>> filter_by_types((charmander, squirtle), {"fire", "grass"})
     (charmander,)
     """
-    raise NotImplementedError("filter_by_types")
+    return tuple(filter(
+        lambda p: not wanted_types
+        or reduce(lambda found, t: found or t in wanted_types, p.types, False),
+        pokemon,
+    ))
 
 
 def fit_score(p: Pokemon, profile: Profile) -> float:
@@ -54,7 +62,11 @@ def fit_score(p: Pokemon, profile: Profile) -> float:
     ...                               stat_weights={"attack": 2, "speed": 1}))
     52*2 + 65*1 + 50*1  ==  219.0
     """
-    raise NotImplementedError("fit_score")
+    stat_part = sum(
+        map(lambda name: getattr(p.stats, name) * profile.stat_weights.get(name, 0), STAT_NAMES)
+    )
+    matches = len(tuple(filter(lambda t: t in profile.types, p.types)))
+    return float(stat_part + profile.type_bonus * matches)
 
 
 def score_all(
@@ -64,7 +76,7 @@ def score_all(
 
     Order stays the same as the input.
     """
-    raise NotImplementedError("score_all")
+    return tuple(map(lambda p: ScoredPokemon(p, fit_score(p, profile)), pokemon))
 
 
 def normalize_scores(
@@ -80,12 +92,20 @@ def normalize_scores(
       - all scores equal       -> every score becomes 100.0
     Order stays the same as the input.
     """
-    raise NotImplementedError("normalize_scores")
+    if not scored:
+        return ()
+    lo, hi = reduce(
+        lambda acc, s: (min(acc[0], s.score), max(acc[1], s.score)),
+        scored,
+        (scored[0].score, scored[0].score),
+    )
+    scale = lambda score: 100.0 if hi == lo else round((score - lo) / (hi - lo) * 100, 1)
+    return tuple(map(lambda s: ScoredPokemon(s.pokemon, scale(s.score)), scored))
 
 
 def rank(scored: Sequence[ScoredPokemon], limit: int) -> tuple[ScoredPokemon, ...]:
     """Sort by score descending (ties: by name ascending) and keep the top `limit`."""
-    raise NotImplementedError("rank")
+    return tuple(sorted(scored, key=lambda s: (-s.score, s.pokemon.name))[:limit])
 
 
 def find_best_matches(
@@ -99,4 +119,12 @@ def find_best_matches(
     filter_by_generation -> filter_by_types(profile.types) -> score_all
     -> normalize_scores -> rank(limit)
     """
-    raise NotImplementedError("find_best_matches")
+    return rank(
+        normalize_scores(
+            score_all(
+                filter_by_types(filter_by_generation(pokemon, generations), profile.types),
+                profile,
+            )
+        ),
+        limit,
+    )

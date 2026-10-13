@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 
 const TYPE_LABELS = {
-  normal: "Normal", fire: "Feuer", water: "Wasser", electric: "Elektro", grass: "Pflanze", ice: "Eis",
-  fighting: "Kampf", poison: "Gift", ground: "Boden", flying: "Flug", psychic: "Psycho", bug: "Käfer",
-  rock: "Gestein", ghost: "Geist", dragon: "Drache", dark: "Unlicht", steel: "Stahl", fairy: "Fee",
+  normal: "Normal", fire: "Fire", water: "Water", electric: "Electric", grass: "Grass", ice: "Ice",
+  fighting: "Fighting", poison: "Poison", ground: "Ground", flying: "Flying", psychic: "Psychic", bug: "Bug",
+  rock: "Rock", ghost: "Ghost", dragon: "Dragon", dark: "Dark", steel: "Steel", fairy: "Fairy",
 };
 
 const TYPE_COLORS = {
@@ -13,8 +13,8 @@ const TYPE_COLORS = {
 };
 
 const STAT_LABELS = {
-  hp: "HP", attack: "Angriff", defense: "Verteidigung",
-  special_attack: "Spez.-Angriff", special_defense: "Spez.-Verteidigung", speed: "Tempo",
+  hp: "HP", attack: "Attack", defense: "Defense",
+  special_attack: "Sp. Attack", special_defense: "Sp. Defense", speed: "Speed",
 };
 
 const range = (from, to) => Array.from({ length: to - from + 1 }, (_, i) => from + i);
@@ -28,13 +28,13 @@ function FilterCard({ generations, genFrom, genTo, setGenFrom, setGenTo, allType
         <select value={genFrom} onChange={e => setGenFrom(Number(e.target.value))}>
           {generations.map(g => <option key={g} value={g}>{g}</option>)}
         </select>
-        <span>bis</span>
+        <span>to</span>
         <select value={genTo} onChange={e => setGenTo(Number(e.target.value))}>
           {generations.map(g => <option key={g} value={g}>{g}</option>)}
         </select>
       </div>
 
-      <label className="label">Typen:</label>
+      <label className="label">Types:</label>
       <div className="types">
         {allTypes.map(t => (
           <label key={t} className="type-check">
@@ -50,7 +50,7 @@ function FilterCard({ generations, genFrom, genTo, setGenFrom, setGenTo, allType
 function StatCard({ stats, weights, setWeight }) {
   return (
     <section className="card card-stats">
-      <h2>Stat-Gewichtung</h2>
+      <h2>Stat Weights</h2>
       <div className="stat-grid">
         {stats.map(s => (
         <label key={s} className="stat">
@@ -72,14 +72,14 @@ function ActionCard({ typeBonus, setTypeBonus, limit, setLimit, loading, onSubmi
   return (
     <section className="actions">
       <button className="submit" onClick={onSubmit} disabled={loading}>
-        {loading ? "Berechne…" : "Team berechnen"}
+        {loading ? "Calculating…" : "Calculate team"}
       </button>
       <label className="option">
-        Typ-Bonus
+        Type bonus
         <input type="number" min="0" value={typeBonus} onChange={e => setTypeBonus(Number(e.target.value))} />
       </label>
       <label className="option">
-        Anzahl
+        Count
         <input type="number" min="1" max="100" value={limit} onChange={e => setLimit(Number(e.target.value))} />
       </label>
     </section>
@@ -89,13 +89,13 @@ function ActionCard({ typeBonus, setTypeBonus, limit, setLimit, loading, onSubmi
 function ResultTable({ results }) {
   return (
     <section className="card card-results">
-      <h2>Ergebnisliste</h2>
+      <h2>Results</h2>
       {results.length === 0 ? (
-        <p className="muted">Keine Pokémon gefunden.</p>
+        <p className="muted">No Pokémon found.</p>
       ) : (
         <table>
           <thead>
-            <tr><th>Pokémon</th><th>Typ</th><th>Fit-Score</th></tr>
+            <tr><th>Pokémon</th><th>Type</th><th>Fit score</th></tr>
           </thead>
           <tbody>
             {results.map(p => (
@@ -141,7 +141,7 @@ export default function App() {
         setGenTo(Math.max(...m.generations));
         setWeights(Object.fromEntries(m.stats.map(s => [s, 1])));
       })
-      .catch(e => setError(`Backend nicht erreichbar: ${e}`));
+      .catch(e => setError(`Backend unreachable: ${e}`));
   }, []);
 
   const toggleType = t =>
@@ -167,7 +167,7 @@ export default function App() {
       const data = await res.json();
       if (!res.ok) {
         const detail = typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail, null, 2);
-        setError(`Fehler ${res.status}: ${detail}`);
+        setError(`Error ${res.status}: ${detail}`);
         setResults(null);
         return;
       }
@@ -184,12 +184,12 @@ export default function App() {
       <header>
         <h1>PokeMatch</h1>
         <p className="muted">
-          Finde das beste Pokémon für dein Team
-          {meta && ` · ${meta.pokemon_loaded} Pokémon geladen · Implementierung: ${meta.implementation}`}
+          Find the best Pokémon for your team
+          {meta && ` · ${meta.pokemon_loaded} Pokémon loaded · Implementation: ${meta.implementation}`}
         </p>
       </header>
 
-      {!meta && !error && <p className="muted">Lade Pokémon…</p>}
+      {!meta && !error && <p className="muted">Loading Pokémon…</p>}
 
       {meta && (
         <div className="grid">
