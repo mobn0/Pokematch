@@ -9,17 +9,16 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
-# ---------------------------------------------------------------------------
-# Choose the implementation here: swap "functional" <-> "imperative"
-from backend import functional as logic
-# ---------------------------------------------------------------------------
+from typing import Literal
 
+from backend import functional, imperative
 from backend.models import ALL_TYPES, GENERATIONS, STAT_NAMES, Profile
 from backend.pokeapi import load_all
 
 logging.basicConfig(level=logging.INFO)
 
-IMPLEMENTATION = logic.__name__.rsplit(".", 1)[-1]
+IMPLEMENTATIONS = {"functional": functional, "imperative": imperative}
+DEFAULT_IMPLEMENTATION = "functional"
 
 POKEMON: tuple = ()
 
@@ -41,6 +40,7 @@ class MatchRequest(BaseModel):
         default_factory=dict, examples=[{"attack": 2, "speed": 1}])
     type_bonus: float = 50.0
     limit: int = Field(10, ge=1, le=100)
+    implementation: Literal["functional", "imperative"] = DEFAULT_IMPLEMENTATION
 
     @field_validator("generations")
     @classmethod
@@ -71,7 +71,8 @@ class MatchRequest(BaseModel):
 @app.get("/api/meta")
 def meta() -> dict:
     return {
-        "implementation": IMPLEMENTATION,
+        "implementation": DEFAULT_IMPLEMENTATION,
+        "implementations": list(IMPLEMENTATIONS),
         "pokemon_loaded": len(POKEMON),
         "generations": list(GENERATIONS),
         "types": list(ALL_TYPES),
@@ -86,17 +87,18 @@ def match(req: MatchRequest) -> dict:
         stat_weights=req.stat_weights,
         type_bonus=req.type_bonus,
     )
+    logic = IMPLEMENTATIONS[req.implementation]
     try:
         best = logic.find_best_matches(
             POKEMON, req.generations, profile, req.limit)
     except NotImplementedError as e:
         raise HTTPException(
             status_code=501,
-            detail=f"'{e}' is not implemented yet in backend/{IMPLEMENTATION}.py",
+            detail=f"'{e}' is not implemented yet in backend/{req.implementation}.py",
         )
 
     return {
-        "implementation": IMPLEMENTATION,
+        "implementation": req.implementation,
         "results": [[s.pokemon.name, s.score] for s in best],
         "details": [
             {

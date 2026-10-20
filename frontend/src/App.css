@@ -67,3 +67,7 @@ tbody tr:nth-child(even) { background: color-mix(in srgb, var(--bg) 60%, var(--c
 .score { color: var(--green-dark); font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .error { color: var(--red); white-space: pre-wrap; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+
+.toggle { display: inline-flex; margin-left: auto; border: 2px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--card); }
+.toggle button { border: 0; background: transparent; color: var(--muted); font: inherit; padding: 6px 16px; cursor: pointer; text-transform: capitalize; }
+.toggle button.active { background: var(--blue); color: #fff; }

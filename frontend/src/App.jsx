@@ -68,6 +68,23 @@ function StatCard({ stats, weights, setWeight }) {
   );
 }
 
+function ImplementationToggle({ options, value, onChange }) {
+  return (
+    <div className="toggle" role="group" aria-label="Implementation">
+      {options.map(o => (
+        <button
+          key={o} type="button"
+          className={o === value ? "active" : ""}
+          aria-pressed={o === value}
+          onClick={() => onChange(o)}
+        >
+          {o}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function ActionCard({ typeBonus, setTypeBonus, limit, setLimit, loading, onSubmit }) {
   return (
     <section className="actions">
@@ -129,6 +146,7 @@ export default function App() {
   const [weights, setWeights] = useState({});
   const [typeBonus, setTypeBonus] = useState(50);
   const [limit, setLimit] = useState(10);
+  const [implementation, setImplementation] = useState("functional");
   const [results, setResults] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -138,6 +156,7 @@ export default function App() {
       .then(r => r.json())
       .then(m => {
         setMeta(m);
+        setImplementation(m.implementation);
         setGenTo(Math.max(...m.generations));
         setWeights(Object.fromEntries(m.stats.map(s => [s, 1])));
       })
@@ -162,6 +181,7 @@ export default function App() {
           stat_weights: weights,
           type_bonus: typeBonus,
           limit,
+          implementation,
         }),
       });
       const data = await res.json();
@@ -185,8 +205,13 @@ export default function App() {
         <h1>PokeMatch</h1>
         <p className="muted">
           Find the best Pokémon for your team
-          {meta && ` · ${meta.pokemon_loaded} Pokémon loaded · Implementation: ${meta.implementation}`}
+          {meta && ` · ${meta.pokemon_loaded} Pokémon loaded`}
         </p>
+        {meta && (
+          <ImplementationToggle
+            options={meta.implementations} value={implementation} onChange={setImplementation}
+          />
+        )}
       </header>
 
       {!meta && !error && <p className="muted">Loading Pokémon…</p>}
